@@ -15,6 +15,8 @@
             --text-main: #1C1C1E;
             --text-muted: #8E8E93;
             --accent: #007AFF; /* iOS Blue */
+            --fatih-color: #007AFF; /* 🔵 Fatih */
+            --enes-color: #34C759; /* 🟢 Enes */
             --success: #34C759;
             --warning: #FF9500;
             --danger: #FF3B30;
@@ -53,7 +55,14 @@
         /* ==========================================================================
            TYPOGRAPHIE & UTILITAIRES
            ========================================================================== */
-        h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin: 24px 20px 16px; }
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 20px 16px;
+        }
+
+        h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin: 0; }
         h2 { font-size: 20px; font-weight: 600; margin-bottom: 12px; }
         .text-success { color: var(--success); }
         .text-danger { color: var(--danger); }
@@ -61,6 +70,98 @@
         .view { display: none; padding: 20px; animation: fadeIn 0.3s ease; }
         .view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ==========================================================================
+           PROFILE SELECTOR (STYLE NETFLIX)
+           ========================================================================== */
+        #view-profile-select {
+            padding: 40px 20px;
+            text-align: center;
+            background: var(--bg-color);
+            min-height: 100vh;
+        }
+
+        .profile-title {
+            font-size: 26px;
+            font-weight: 700;
+            margin-top: 40px;
+            margin-bottom: 8px;
+        }
+
+        .profile-subtitle {
+            font-size: 15px;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+        }
+
+        .profiles-grid {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+        }
+
+        .profile-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .profile-card:active {
+            transform: scale(0.95);
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            color: white;
+            font-weight: 700;
+            margin-bottom: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .profile-avatar.fatih {
+            background: linear-gradient(135deg, #007AFF 0%, #0051A8 100%);
+        }
+
+        .profile-avatar.enes {
+            background: linear-gradient(135deg, #34C759 0%, #248A3D 100%);
+        }
+
+        .profile-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        /* Profile Switcher Button (Top Right) */
+        .profile-badge-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--card-bg);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            border: 1px solid var(--border);
+        }
+
+        .profile-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .profile-dot.fatih { background-color: var(--fatih-color); }
+        .profile-dot.enes { background-color: var(--enes-color); }
 
         /* ==========================================================================
            DASHBOARD CARDS
@@ -93,15 +194,20 @@
         .product-card {
             background: var(--card-bg); border-radius: var(--radius); padding: 16px;
             margin-bottom: 16px; box-shadow: var(--shadow); display: flex; gap: 16px;
-            align-items: center; position: relative;
+            align-items: center; position: relative; cursor: pointer;
         }
-        .product-img-placeholder {
+        .product-img-container {
             width: 80px; height: 80px; border-radius: 12px; background: #E5E5EA;
             display: flex; align-items: center; justify-content: center; color: #8E8E93;
-            font-size: 24px; flex-shrink: 0;
+            font-size: 24px; flex-shrink: 0; overflow: hidden; position: relative;
+        }
+        .product-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         .product-info { flex-grow: 1; }
-        .product-title { font-weight: 600; font-size: 16px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+        .product-title { font-weight: 600; font-size: 16px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
         .product-id { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
         
         .badge {
@@ -116,7 +222,7 @@
         .finance-profit { font-size: 15px; font-weight: 700; }
 
         /* ==========================================================================
-           FORMS & INPUTS
+           FORMS, INPUTS & IMAGE UPLOAD
            ========================================================================== */
         .input-group { margin-bottom: 20px; }
         .input-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -127,6 +233,36 @@
         }
         .input-group input:focus, .input-group select:focus { border-color: var(--accent); }
         
+        /* Zone de téléversement photo */
+        .image-uploader-box {
+            background: var(--card-bg);
+            border: 2px dashed #C7C7CC;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+        }
+        .image-uploader-box i { font-size: 28px; color: var(--accent); }
+        .image-uploader-box img {
+            width: 100%;
+            max-height: 180px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        .image-uploader-box input[type="file"] {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
         .btn {
             width: 100%; padding: 18px; border-radius: 14px; font-size: 16px; font-weight: 600;
             border: none; cursor: pointer; transition: transform 0.1s;
@@ -148,7 +284,6 @@
         .nav-item i { font-size: 20px; margin-bottom: 4px; }
         .nav-item.active { color: var(--text-main); }
         
-        /* Bouton + flottant intégré à la nav */
         .nav-fab {
             width: 50px; height: 50px; border-radius: 25px; background: var(--text-main);
             color: white; display: flex; justify-content: center; align-items: center;
@@ -166,20 +301,43 @@
 
 <div id="app-container">
     
-    <div id="view-dashboard" class="view active">
-        <h1>Mon Activité</h1>
+    <div id="view-profile-select" class="view">
+        <div class="profile-title">Qui utilise l'application ?</div>
+        <div class="profile-subtitle">Sélectionnez votre profil pour accéder à vos produits</div>
+        
+        <div class="profiles-grid">
+            <div class="profile-card" onclick="selectProfile('fatih')">
+                <div class="profile-avatar fatih">F</div>
+                <div class="profile-name">Fatih</div>
+            </div>
+            <div class="profile-card" onclick="selectProfile('enes')">
+                <div class="profile-avatar enes">E</div>
+                <div class="profile-name">Enes</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-dashboard" class="view">
+        <div class="header-bar">
+            <h1>Mon Activité</h1>
+            <div class="profile-badge-btn" onclick="showProfileSelect()">
+                <div class="profile-dot" id="current-profile-dot"></div>
+                <span id="current-profile-name">Profil</span>
+                <i class="fa-solid fa-chevron-down" style="font-size: 10px; color: var(--text-muted);"></i>
+            </div>
+        </div>
         
         <div class="summary-card">
             <div class="summary-header">Bénéfice Réalisé</div>
-            <div class="summary-main" id="dash-realized-profit">€0</div>
+            <div class="summary-main" id="dash-realized-profit">€0.00</div>
             
             <div class="summary-stats">
                 <div class="stat-item">
-                    <span class="stat-value" id="dash-invested">€0</span>
+                    <span class="stat-value" id="dash-invested">€0.00</span>
                     <span class="stat-label">Investis</span>
                 </div>
                 <div class="stat-item" style="text-align: right;">
-                    <span class="stat-value text-success" id="dash-potential-profit">+€0</span>
+                    <span class="stat-value text-success" id="dash-potential-profit">+€0.00</span>
                     <span class="stat-label">Gain Potentiel</span>
                 </div>
             </div>
@@ -200,7 +358,13 @@
     </div>
 
     <div id="view-products" class="view">
-        <h1>Inventaire</h1>
+        <div class="header-bar">
+            <h1>Inventaire</h1>
+            <div class="profile-badge-btn" onclick="showProfileSelect()">
+                <div class="profile-dot" id="current-profile-dot-2"></div>
+                <span id="current-profile-name-2">Profil</span>
+            </div>
+        </div>
         
         <div class="filters">
             <div class="filter-btn active" onclick="filterProducts('Tous')">Tous</div>
@@ -214,15 +378,27 @@
     </div>
 
     <div id="view-form" class="view">
-        <h1 id="form-title">Nouveau Produit</h1>
+        <div class="header-bar">
+            <h1 id="form-title">Nouveau Produit</h1>
+        </div>
         
+        <div class="input-group">
+            <label>Photo du produit</label>
+            <div class="image-uploader-box" id="image-upload-box">
+                <i class="fa-solid fa-camera"></i>
+                <span id="image-upload-text">Toucher pour ajouter une photo</span>
+                <img id="image-preview" src="" alt="Aperçu" style="display:none;">
+                <input type="file" id="input-photo-file" accept="image/*" onchange="handleImageUpload(event)">
+            </div>
+        </div>
+
         <div class="input-group">
             <label>Lien Vinted (Optionnel)</label>
             <input type="url" id="input-link" placeholder="https://vinted.fr/...">
         </div>
         <div class="input-group">
             <label>Nom du Produit *</label>
-            <input type="text" id="input-name" placeholder="Ex: Pull Nike Vintage">
+            <input type="text" id="input-name" placeholder="Ex: Pull Nike Vert Olive">
         </div>
         <div class="input-group">
             <label>Marque</label>
@@ -235,12 +411,12 @@
             </div>
             <div class="input-group">
                 <label>Frais (€)</label>
-                <input type="number" id="input-fees" placeholder="2.5" step="0.5">
+                <input type="number" id="input-fees" placeholder="2" step="0.5">
             </div>
         </div>
         <div class="input-group">
             <label>Prix de vente prévu (€) *</label>
-            <input type="number" id="input-sell" placeholder="45" step="0.5">
+            <input type="number" id="input-sell" placeholder="40" step="0.5">
         </div>
         <div class="input-group">
             <label>Prix Vendu Réel (€)</label>
@@ -256,11 +432,13 @@
         </div>
 
         <input type="hidden" id="input-id">
+        <input type="hidden" id="input-photo-base64">
+        
         <button class="btn btn-primary" onclick="saveProduct()">Enregistrer le produit</button>
         <button class="btn btn-danger" id="btn-delete" style="display:none;" onclick="deleteProduct()">Supprimer ce produit</button>
     </div>
 
-    <nav class="bottom-nav">
+    <nav class="bottom-nav" id="main-nav" style="display: none;">
         <div class="nav-item active" onclick="switchView('view-dashboard', this)">
             <i class="fa-solid fa-chart-pie"></i>
             <span>Bilan</span>
@@ -278,24 +456,75 @@
 
 <script>
     /* ==========================================================================
-       LOGIQUE JAVASCRIPT & STATE MANAGEMENT
+       LOGIQUE JAVASCRIPT & PROFILE MANAGEMENT
        ========================================================================== */
     
     // Initialisation du stockage local
     let products = JSON.parse(localStorage.getItem('vinted_products')) || [];
+    let currentProfile = localStorage.getItem('vinted_active_profile') || null;
     let currentFilter = 'Tous';
 
-    // Formate les nombres en euros
     const formatEur = (num) => '€' + parseFloat(num).toFixed(2);
-    
+
+    // Initialisation de l'application
+    function initApp() {
+        if (!currentProfile) {
+            showProfileSelect();
+        } else {
+            activateProfileUI();
+            switchView('view-dashboard');
+        }
+    }
+
+    // Afficher l'écran de sélection de profil
+    function showProfileSelect() {
+        document.getElementById('main-nav').style.display = 'none';
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById('view-profile-select').classList.add('active');
+    }
+
+    // Sélectionner un profil
+    function selectProfile(profileKey) {
+        currentProfile = profileKey;
+        localStorage.setItem('vinted_active_profile', profileKey);
+        activateProfileUI();
+        switchView('view-dashboard');
+    }
+
+    // Mettre à jour l'interface selon le profil actif
+    function activateProfileUI() {
+        document.getElementById('main-nav').style.display = 'flex';
+        const profileName = currentProfile === 'fatih' ? 'Fatih' : 'Enes';
+        
+        document.getElementById('current-profile-name').innerText = profileName;
+        document.getElementById('current-profile-name-2').innerText = profileName;
+
+        const dot1 = document.getElementById('current-profile-dot');
+        const dot2 = document.getElementById('current-profile-dot-2');
+
+        dot1.className = 'profile-dot ' + currentProfile;
+        dot2.className = 'profile-dot ' + currentProfile;
+    }
+
+    // Obtenir uniquement les produits du profil actif
+    function getActiveProfileProducts() {
+        return products.filter(p => p.profileId === currentProfile);
+    }
+
     // Génère l'ID #0001
     const generateId = () => {
-        const count = products.length + 1;
+        const profileProducts = getActiveProfileProducts();
+        const count = profileProducts.length + 1;
         return '#' + count.toString().padStart(4, '0');
     };
 
     // Navigation entre les vues
     function switchView(viewId, navElement = null) {
+        if(!currentProfile && viewId !== 'view-profile-select') {
+            showProfileSelect();
+            return;
+        }
+
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.getElementById(viewId).classList.add('active');
         
@@ -306,6 +535,35 @@
 
         if(viewId === 'view-dashboard') updateDashboard();
         if(viewId === 'view-products') renderProducts();
+    }
+
+    // Gestion de l'upload de photo
+    function handleImageUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const base64Image = e.target.result;
+            document.getElementById('input-photo-base64').value = base64Image;
+            
+            const previewImg = document.getElementById('image-preview');
+            previewImg.src = base64Image;
+            previewImg.style.display = 'block';
+            
+            document.getElementById('image-upload-text').style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // Réinitialiser le composant image
+    function resetImageUploader() {
+        document.getElementById('input-photo-base64').value = "";
+        document.getElementById('input-photo-file').value = "";
+        const previewImg = document.getElementById('image-preview');
+        previewImg.src = "";
+        previewImg.style.display = 'none';
+        document.getElementById('image-upload-text').style.display = 'block';
     }
 
     // Ouvrir le formulaire en mode "Ajout"
@@ -321,26 +579,36 @@
         document.getElementById('input-actual-sell').value = "";
         document.getElementById('input-status').value = "En vente";
         document.getElementById('btn-delete').style.display = "none";
+        resetImageUploader();
         
         switchView('view-form');
     }
 
     // Ouvrir le formulaire en mode "Édition"
     function editProduct(id) {
-        const p = products.find(prod => prod.id === id);
+        const p = products.find(prod => prod.id === id && prod.profileId === currentProfile);
         if(!p) return;
 
-        document.getElementById('form-title').innerText = "Modifier Produit " + p.id;
+        document.getElementById('form-title').innerText = "Modifier " + p.id;
         document.getElementById('input-id').value = p.id;
         document.getElementById('input-name').value = p.name;
-        document.getElementById('input-brand').value = p.brand;
-        document.getElementById('input-link').value = p.link;
+        document.getElementById('input-brand').value = p.brand || "";
+        document.getElementById('input-link').value = p.link || "";
         document.getElementById('input-buy').value = p.buyPrice;
         document.getElementById('input-sell').value = p.sellPrice;
         document.getElementById('input-fees').value = p.fees || "";
         document.getElementById('input-actual-sell').value = p.actualSellPrice || "";
         document.getElementById('input-status').value = p.status;
         document.getElementById('btn-delete').style.display = "block";
+        
+        resetImageUploader();
+        if (p.image) {
+            document.getElementById('input-photo-base64').value = p.image;
+            const previewImg = document.getElementById('image-preview');
+            previewImg.src = p.image;
+            previewImg.style.display = 'block';
+            document.getElementById('image-upload-text').style.display = 'none';
+        }
         
         switchView('view-form');
     }
@@ -359,9 +627,11 @@
 
         const productData = {
             id: idInput ? idInput : generateId(),
+            profileId: currentProfile,
             name: name,
             brand: document.getElementById('input-brand').value,
             link: document.getElementById('input-link').value,
+            image: document.getElementById('input-photo-base64').value || null,
             buyPrice: buyPrice,
             sellPrice: sellPrice,
             fees: parseFloat(document.getElementById('input-fees').value) || 0,
@@ -371,10 +641,10 @@
         };
 
         if(idInput) {
-            const index = products.findIndex(p => p.id === idInput);
-            products[index] = productData;
+            const index = products.findIndex(p => p.id === idInput && p.profileId === currentProfile);
+            if(index !== -1) products[index] = productData;
         } else {
-            products.unshift(productData); // Ajout au début
+            products.unshift(productData);
         }
 
         saveToLocal();
@@ -385,7 +655,7 @@
     function deleteProduct() {
         const id = document.getElementById('input-id').value;
         if(confirm("Supprimer ce produit définitivement ?")) {
-            products = products.filter(p => p.id !== id);
+            products = products.filter(p => !(p.id === id && p.profileId === currentProfile));
             saveToLocal();
             switchView('view-products', document.querySelectorAll('.nav-item')[1]);
         }
@@ -414,7 +684,8 @@
         const list = document.getElementById('product-list');
         list.innerHTML = "";
 
-        const filtered = currentFilter === 'Tous' ? products : products.filter(p => p.status === currentFilter);
+        const profileProducts = getActiveProfileProducts();
+        const filtered = currentFilter === 'Tous' ? profileProducts : profileProducts.filter(p => p.status === currentFilter);
 
         if(filtered.length === 0) {
             list.innerHTML = `<div style="text-align:center; padding: 40px; color: var(--text-muted);">Aucun produit trouvé.</div>`;
@@ -434,12 +705,18 @@
                 profitHtml = `<div class="finance-profit" style="color:var(--text-muted);">~${potentialProfit > 0 ? '+' : ''}${formatEur(potentialProfit)}</div>`;
             }
 
-            // Utilisation d'une initiale comme image par défaut ultra minimaliste
-            const initial = p.brand ? p.brand.charAt(0).toUpperCase() : p.name.charAt(0).toUpperCase();
+            // Gestion de l'image du produit
+            let imgContainerHtml = '';
+            if (p.image) {
+                imgContainerHtml = `<img src="${p.image}" class="product-img" alt="${p.name}">`;
+            } else {
+                const initial = p.brand ? p.brand.charAt(0).toUpperCase() : p.name.charAt(0).toUpperCase();
+                imgContainerHtml = `<span>${initial}</span>`;
+            }
 
             list.innerHTML += `
                 <div class="product-card" onclick="editProduct('${p.id}')">
-                    <div class="product-img-placeholder">${initial}</div>
+                    <div class="product-img-container">${imgContainerHtml}</div>
                     <div class="product-info">
                         <div class="product-id">${p.id}</div>
                         <div class="product-title">${p.name}</div>
@@ -455,7 +732,7 @@
         });
     }
 
-    // Mise à jour du Dashboard (Calculs)
+    // Mise à jour du Dashboard (Calculs isolés par profil)
     function updateDashboard() {
         let invested = 0;
         let potentialProfit = 0;
@@ -463,7 +740,9 @@
         let sellingCount = 0;
         let soldCount = 0;
 
-        products.forEach(p => {
+        const profileProducts = getActiveProfileProducts();
+
+        profileProducts.forEach(p => {
             if(p.status !== 'Vendu') {
                 invested += (p.buyPrice + p.fees);
             }
@@ -491,7 +770,7 @@
     }
 
     // Lancement au démarrage
-    updateDashboard();
+    initApp();
 
 </script>
 </body>

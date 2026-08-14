@@ -182,8 +182,8 @@
         .summary-main { font-size: 36px; font-weight: 700; margin: 8px 0; }
         .summary-stats { display: flex; justify-content: space-between; margin-top: 20px; }
         .stat-item { display: flex; flex-direction: column; }
-        .stat-value { font-size: 18px; font-weight: 600; }
-        .stat-label { font-size: 12px; color: rgba(255,255,255,0.6); }
+        .stat-value { font-size: 16px; font-weight: 600; }
+        .stat-label { font-size: 11px; color: rgba(255,255,255,0.6); }
 
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
         .mini-card {
@@ -237,7 +237,6 @@
         }
         .input-group input:focus, .input-group select:focus { border-color: var(--accent); }
         
-        /* Zone de téléversement photo */
         .image-uploader-box {
             background: var(--card-bg);
             border: 2px dashed #C7C7CC;
@@ -332,7 +331,7 @@
         </div>
         
         <div class="summary-card">
-            <div class="summary-header">Bénéfice Réalisé</div>
+            <div class="summary-header">Gain Réalisé</div>
             <div class="summary-main" id="dash-realized-profit">€0.00</div>
             
             <div class="summary-stats">
@@ -340,9 +339,13 @@
                     <span class="stat-value" id="dash-invested">€0.00</span>
                     <span class="stat-label">Investis</span>
                 </div>
-                <div class="stat-item" style="text-align: right;">
+                <div class="stat-item" style="text-align: center;">
                     <span class="stat-value text-success" id="dash-potential-profit">+€0.00</span>
                     <span class="stat-label">Gain Potentiel</span>
+                </div>
+                <div class="stat-item" style="text-align: right;">
+                    <span class="stat-value text-success" id="dash-total-profit">+€0.00</span>
+                    <span class="stat-label">Gain Total</span>
                 </div>
             </div>
         </div>
@@ -463,14 +466,13 @@
        LOGIQUE JAVASCRIPT & PROFILE MANAGEMENT
        ========================================================================== */
     
-    // Initialisation du stockage local
     let products = JSON.parse(localStorage.getItem('vinted_products')) || [];
     let currentProfile = localStorage.getItem('vinted_active_profile') || null;
     let currentFilter = 'Tous';
 
     const formatEur = (num) => '€' + parseFloat(num).toFixed(2);
 
-    // Initialisation de l'application
+    // Initialisation
     function initApp() {
         if (!currentProfile) {
             showProfileSelect();
@@ -480,14 +482,12 @@
         }
     }
 
-    // Afficher l'écran de sélection de profil
     function showProfileSelect() {
         document.getElementById('main-nav').style.display = 'none';
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         document.getElementById('view-profile-select').classList.add('active');
     }
 
-    // Sélectionner un profil
     function selectProfile(profileKey) {
         currentProfile = profileKey;
         localStorage.setItem('vinted_active_profile', profileKey);
@@ -495,7 +495,6 @@
         switchView('view-dashboard');
     }
 
-    // Mettre à jour l'interface selon le profil actif
     function activateProfileUI() {
         document.getElementById('main-nav').style.display = 'flex';
         const profileName = currentProfile === 'fatih' ? 'Fatih' : 'Enes';
@@ -510,19 +509,16 @@
         dot2.className = 'profile-dot ' + currentProfile;
     }
 
-    // Obtenir uniquement les produits du profil actif
     function getActiveProfileProducts() {
         return products.filter(p => p.profileId === currentProfile);
     }
 
-    // Génère l'ID #0001
     const generateId = () => {
         const profileProducts = getActiveProfileProducts();
         const count = profileProducts.length + 1;
         return '#' + count.toString().padStart(4, '0');
     };
 
-    // Navigation entre les vues
     function switchView(viewId, navElement = null) {
         if(!currentProfile && viewId !== 'view-profile-select') {
             showProfileSelect();
@@ -541,7 +537,31 @@
         if(viewId === 'view-products') renderProducts();
     }
 
-    // Gestion de l'upload de photo
+    // FONCTION DE CALCUL UNIFIÉE
+    function getProductFinances(p) {
+        const buy = Number(p.buyPrice) || 0;
+        const fees = Number(p.fees) || 0;
+        const cost = buy + fees;
+        const targetSell = Number(p.sellPrice) || 0;
+        
+        const hasActualSell = (p.actualSellPrice !== null && p.actualSellPrice !== undefined && p.actualSellPrice !== "" && !isNaN(p.actualSellPrice));
+        const actualSell = hasActualSell ? Number(p.actualSellPrice) : targetSell;
+
+        const potentialProfit = targetSell - cost;
+        const realizedProfit = actualSell - cost;
+
+        return {
+            buy,
+            fees,
+            cost,
+            targetSell,
+            actualSell,
+            hasActualSell,
+            potentialProfit,
+            realizedProfit
+        };
+    }
+
     function handleImageUpload(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -560,7 +580,6 @@
         reader.readAsDataURL(file);
     }
 
-    // Réinitialiser le composant image
     function resetImageUploader() {
         document.getElementById('input-photo-base64').value = "";
         document.getElementById('input-photo-file').value = "";
@@ -570,7 +589,6 @@
         document.getElementById('image-upload-text').style.display = 'block';
     }
 
-    // Ouvrir le formulaire en mode "Ajout"
     function openAddForm() {
         document.getElementById('form-title').innerText = "Nouveau Produit";
         document.getElementById('input-id').value = "";
@@ -588,7 +606,6 @@
         switchView('view-form');
     }
 
-    // Ouvrir le formulaire en mode "Édition"
     function editProduct(id) {
         const p = products.find(prod => prod.id === id && prod.profileId === currentProfile);
         if(!p) return;
@@ -601,7 +618,7 @@
         document.getElementById('input-buy').value = p.buyPrice;
         document.getElementById('input-sell').value = p.sellPrice;
         document.getElementById('input-fees').value = p.fees || "";
-        document.getElementById('input-actual-sell').value = p.actualSellPrice || "";
+        document.getElementById('input-actual-sell').value = p.actualSellPrice !== null ? p.actualSellPrice : "";
         document.getElementById('input-status').value = p.status;
         document.getElementById('btn-delete').style.display = "block";
         
@@ -617,12 +634,12 @@
         switchView('view-form');
     }
 
-    // Sauvegarder (Création ou Mise à jour)
     function saveProduct() {
         const idInput = document.getElementById('input-id').value;
         const name = document.getElementById('input-name').value.trim();
         const buyPrice = parseFloat(document.getElementById('input-buy').value) || 0;
         const sellPrice = parseFloat(document.getElementById('input-sell').value) || 0;
+        const actualSellVal = document.getElementById('input-actual-sell').value;
         
         if(!name || buyPrice === 0) {
             alert("Le nom et le prix d'achat sont obligatoires.");
@@ -639,7 +656,7 @@
             buyPrice: buyPrice,
             sellPrice: sellPrice,
             fees: parseFloat(document.getElementById('input-fees').value) || 0,
-            actualSellPrice: parseFloat(document.getElementById('input-actual-sell').value) || null,
+            actualSellPrice: actualSellVal !== "" ? parseFloat(actualSellVal) : null,
             status: document.getElementById('input-status').value,
             date: new Date().toISOString()
         };
@@ -655,7 +672,6 @@
         switchView('view-products', document.querySelectorAll('.nav-item')[1]);
     }
 
-    // Supprimer un produit
     function deleteProduct() {
         const id = document.getElementById('input-id').value;
         if(confirm("Supprimer ce produit définitivement ?")) {
@@ -665,13 +681,11 @@
         }
     }
 
-    // Sauvegarde LocalStorage
     function saveToLocal() {
         localStorage.setItem('vinted_products', JSON.stringify(products));
         updateDashboard();
     }
 
-    // Gérer les filtres
     function filterProducts(status) {
         currentFilter = status;
         document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -683,7 +697,6 @@
         renderProducts();
     }
 
-    // Affichage de la liste des produits
     function renderProducts() {
         const list = document.getElementById('product-list');
         list.innerHTML = "";
@@ -697,19 +710,18 @@
         }
 
         filtered.forEach(p => {
-            const potentialProfit = p.sellPrice - p.buyPrice - p.fees;
-            const actualProfit = p.actualSellPrice ? (p.actualSellPrice - p.buyPrice - p.fees) : null;
-            
+            const fin = getProductFinances(p);
             let badgeClass = p.status.toLowerCase().replace(' ', '-');
             let profitHtml = '';
             
-            if(p.status === 'Vendu' && actualProfit !== null) {
-                profitHtml = `<div class="finance-profit ${actualProfit >= 0 ? 'text-success' : 'text-danger'}">${actualProfit >= 0 ? '+' : ''}${formatEur(actualProfit)}</div>`;
+            if(p.status === 'Vendu') {
+                const profit = fin.realizedProfit;
+                profitHtml = `<div class="finance-profit ${profit >= 0 ? 'text-success' : 'text-danger'}">${profit >= 0 ? '+' : ''}${formatEur(profit)}</div>`;
             } else {
-                profitHtml = `<div class="finance-profit" style="color:var(--text-muted);">~${potentialProfit > 0 ? '+' : ''}${formatEur(potentialProfit)}</div>`;
+                const profit = fin.potentialProfit;
+                profitHtml = `<div class="finance-profit" style="color:var(--text-muted);">~${profit >= 0 ? '+' : ''}${formatEur(profit)}</div>`;
             }
 
-            // Gestion de l'image du produit
             let imgContainerHtml = '';
             if (p.image) {
                 imgContainerHtml = `<img src="${p.image}" class="product-img" alt="${p.name}">`;
@@ -717,6 +729,8 @@
                 const initial = p.brand ? p.brand.charAt(0).toUpperCase() : p.name.charAt(0).toUpperCase();
                 imgContainerHtml = `<span>${initial}</span>`;
             }
+
+            const displayedSellPrice = p.status === 'Vendu' ? fin.actualSell : fin.targetSell;
 
             list.innerHTML += `
                 <div class="product-card" onclick="editProduct('${p.id}')">
@@ -727,8 +741,8 @@
                         <div class="badge ${badgeClass}">${p.status}</div>
                     </div>
                     <div class="product-finances">
-                        <div class="finance-line">Achat ${formatEur(p.buyPrice)}</div>
-                        <div class="finance-line">Vente ${p.actualSellPrice ? formatEur(p.actualSellPrice) : formatEur(p.sellPrice)}</div>
+                        <div class="finance-line">Achat ${formatEur(fin.cost)}</div>
+                        <div class="finance-line">Vente ${formatEur(displayedSellPrice)}</div>
                         ${profitHtml}
                     </div>
                 </div>
@@ -736,7 +750,6 @@
         });
     }
 
-    // Mise à jour du Dashboard (Calculs isolés par profil)
     function updateDashboard() {
         let invested = 0;
         let potentialProfit = 0;
@@ -747,33 +760,40 @@
         const profileProducts = getActiveProfileProducts();
 
         profileProducts.forEach(p => {
-            if(p.status !== 'Vendu') {
-                invested += (p.buyPrice + p.fees);
-            }
-            
-            if(p.status === 'En vente') {
-                sellingCount++;
-                potentialProfit += (p.sellPrice - p.buyPrice - p.fees);
-            }
-            
-            if(p.status === 'Vendu') {
+            const fin = getProductFinances(p);
+
+            if (p.status === 'Vendu') {
                 soldCount++;
-                realizedProfit += (p.actualSellPrice - p.buyPrice - p.fees);
+                realizedProfit += fin.realizedProfit;
+            } else {
+                invested += fin.cost;
+                potentialProfit += fin.potentialProfit;
+                if (p.status === 'En vente') {
+                    sellingCount++;
+                }
             }
         });
 
+        const totalProfit = realizedProfit + potentialProfit;
+
         document.getElementById('dash-invested').innerText = formatEur(invested);
-        document.getElementById('dash-potential-profit').innerText = '+' + formatEur(potentialProfit);
+
+        const potProfEl = document.getElementById('dash-potential-profit');
+        potProfEl.innerText = (potentialProfit >= 0 ? '+' : '') + formatEur(potentialProfit);
+        potProfEl.className = 'stat-value ' + (potentialProfit >= 0 ? 'text-success' : 'text-danger');
+
+        const totalProfEl = document.getElementById('dash-total-profit');
+        totalProfEl.innerText = (totalProfit >= 0 ? '+' : '') + formatEur(totalProfit);
+        totalProfEl.className = 'stat-value ' + (totalProfit >= 0 ? 'text-success' : 'text-danger');
         
         const realProfEl = document.getElementById('dash-realized-profit');
-        realProfEl.innerText = (realizedProfit > 0 ? '+' : '') + formatEur(realizedProfit);
+        realProfEl.innerText = (realizedProfit >= 0 ? '+' : '') + formatEur(realizedProfit);
         realProfEl.className = 'summary-main ' + (realizedProfit >= 0 ? 'text-success' : 'text-danger');
 
         document.getElementById('dash-count-selling').innerText = sellingCount;
         document.getElementById('dash-count-sold').innerText = soldCount;
     }
 
-    // Lancement au démarrage
     initApp();
 
 </script>

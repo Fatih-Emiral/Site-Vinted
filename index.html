@@ -184,6 +184,8 @@
         .stat-item { display: flex; flex-direction: column; }
         .stat-value { font-size: 16px; font-weight: 600; }
         .stat-label { font-size: 11px; color: rgba(255,255,255,0.6); }
+        .rep-label { font-size: 11px; color: rgb(3, 3, 3); }
+
 
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
         .mini-card {
@@ -353,12 +355,12 @@
         <div class="grid-2">
             <div class="mini-card">
                 <i class="fa-solid fa-box-open"></i>
-                <span class="stat-label">En Vente</span>
+                <span class="rep-label">En Vente</span>
                 <span class="stat-value" id="dash-count-selling">0</span>
             </div>
             <div class="mini-card">
                 <i class="fa-solid fa-check-circle"></i>
-                <span class="stat-label">Vendus</span>
+                <span class="rep-label">Vendus</span>
                 <span class="stat-value" id="dash-count-sold">0</span>
             </div>
         </div>

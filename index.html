@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vinted Tracker - Premium</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ==========================================================================
+           VARIABLES & RESET
+           ========================================================================== */
+        :root {
+            --bg-color: #F5F7FA;
+            --card-bg: #FFFFFF;
+            --text-main: #1C1C1E;
+            --text-muted: #8E8E93;
+            --accent: #007AFF; /* iOS Blue */
+            --success: #34C759;
+            --warning: #FF9500;
+            --danger: #FF3B30;
+            --border: rgba(0, 0, 0, 0.05);
+            --shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+            --radius: 20px;
+            --nav-height: 80px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            overflow-x: hidden;
+            overscroll-behavior-y: none;
+        }
+
+        /* Container pour forcer l'affichage mobile sur desktop */
+        #app-container {
+            max-width: 430px; /* Taille max d'un iPhone Pro Max */
+            margin: 0 auto;
+            background: var(--bg-color);
+            min-height: 100vh;
+            position: relative;
+            padding-bottom: var(--nav-height);
+            box-shadow: 0 0 40px rgba(0,0,0,0.1);
+        }
+
+        /* ==========================================================================
+           TYPOGRAPHIE & UTILITAIRES
+           ========================================================================== */
+        h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin: 24px 20px 16px; }
+        h2 { font-size: 20px; font-weight: 600; margin-bottom: 12px; }
+        .text-success { color: var(--success); }
+        .text-danger { color: var(--danger); }
+        
+        .view { display: none; padding: 20px; animation: fadeIn 0.3s ease; }
+        .view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ==========================================================================
+           DASHBOARD CARDS
+           ========================================================================== */
+        .summary-card {
+            background: linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%);
+            border-radius: var(--radius);
+            padding: 24px;
+            color: white;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        .summary-header { font-size: 14px; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 1px; }
+        .summary-main { font-size: 36px; font-weight: 700; margin: 8px 0; }
+        .summary-stats { display: flex; justify-content: space-between; margin-top: 20px; }
+        .stat-item { display: flex; flex-direction: column; }
+        .stat-value { font-size: 18px; font-weight: 600; }
+        .stat-label { font-size: 12px; color: rgba(255,255,255,0.6); }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+        .mini-card {
+            background: var(--card-bg); border-radius: 16px; padding: 16px;
+            box-shadow: var(--shadow); display: flex; flex-direction: column;
+        }
+        .mini-card i { font-size: 20px; color: var(--accent); margin-bottom: 8px; }
+
+        /* ==========================================================================
+           PRODUCT CARDS
+           ========================================================================== */
+        .product-card {
+            background: var(--card-bg); border-radius: var(--radius); padding: 16px;
+            margin-bottom: 16px; box-shadow: var(--shadow); display: flex; gap: 16px;
+            align-items: center; position: relative;
+        }
+        .product-img-placeholder {
+            width: 80px; height: 80px; border-radius: 12px; background: #E5E5EA;
+            display: flex; align-items: center; justify-content: center; color: #8E8E93;
+            font-size: 24px; flex-shrink: 0;
+        }
+        .product-info { flex-grow: 1; }
+        .product-title { font-weight: 600; font-size: 16px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+        .product-id { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+        
+        .badge {
+            display: inline-block; padding: 4px 8px; border-radius: 8px; font-size: 11px; font-weight: 600; text-transform: uppercase;
+        }
+        .badge.achete { background: rgba(255,149,0,0.1); color: var(--warning); }
+        .badge.en-vente { background: rgba(0,122,255,0.1); color: var(--accent); }
+        .badge.vendu { background: rgba(52,199,89,0.1); color: var(--success); }
+
+        .product-finances { text-align: right; }
+        .finance-line { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
+        .finance-profit { font-size: 15px; font-weight: 700; }
+
+        /* ==========================================================================
+           FORMS & INPUTS
+           ========================================================================== */
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .input-group input, .input-group select {
+            width: 100%; padding: 16px; border: 1px solid var(--border); border-radius: 12px;
+            background: var(--card-bg); font-size: 16px; color: var(--text-main); outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-group input:focus, .input-group select:focus { border-color: var(--accent); }
+        
+        .btn {
+            width: 100%; padding: 18px; border-radius: 14px; font-size: 16px; font-weight: 600;
+            border: none; cursor: pointer; transition: transform 0.1s;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background: var(--text-main); color: white; }
+        .btn-danger { background: rgba(255,59,48,0.1); color: var(--danger); margin-top: 20px; }
+
+        /* ==========================================================================
+           BOTTOM NAVIGATION
+           ========================================================================== */
+        .bottom-nav {
+            position: fixed; bottom: 0; width: 100%; max-width: 430px; height: var(--nav-height);
+            background: rgba(255,255,255,0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center;
+            padding-bottom: 15px; z-index: 100; left: 50%; transform: translateX(-50%);
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); font-size: 11px; font-weight: 500; cursor: pointer; }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .nav-item.active { color: var(--text-main); }
+        
+        /* Bouton + flottant intégré à la nav */
+        .nav-fab {
+            width: 50px; height: 50px; border-radius: 25px; background: var(--text-main);
+            color: white; display: flex; justify-content: center; align-items: center;
+            font-size: 24px; margin-top: -20px; box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        /* Filtres */
+        .filters { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px; -ms-overflow-style: none; scrollbar-width: none; }
+        .filters::-webkit-scrollbar { display: none; }
+        .filter-btn { padding: 8px 16px; border-radius: 20px; background: var(--card-bg); font-size: 14px; font-weight: 500; border: 1px solid var(--border); white-space: nowrap; }
+        .filter-btn.active { background: var(--text-main); color: white; border-color: var(--text-main); }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    
+    <div id="view-dashboard" class="view active">
+        <h1>Mon Activité</h1>
+        
+        <div class="summary-card">
+            <div class="summary-header">Bénéfice Réalisé</div>
+            <div class="summary-main" id="dash-realized-profit">€0</div>
+            
+            <div class="summary-stats">
+                <div class="stat-item">
+                    <span class="stat-value" id="dash-invested">€0</span>
+                    <span class="stat-label">Investis</span>
+                </div>
+                <div class="stat-item" style="text-align: right;">
+                    <span class="stat-value text-success" id="dash-potential-profit">+€0</span>
+                    <span class="stat-label">Gain Potentiel</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="mini-card">
+                <i class="fa-solid fa-box-open"></i>
+                <span class="stat-label">En Vente</span>
+                <span class="stat-value" id="dash-count-selling">0</span>
+            </div>
+            <div class="mini-card">
+                <i class="fa-solid fa-check-circle"></i>
+                <span class="stat-label">Vendus</span>
+                <span class="stat-value" id="dash-count-sold">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-products" class="view">
+        <h1>Inventaire</h1>
+        
+        <div class="filters">
+            <div class="filter-btn active" onclick="filterProducts('Tous')">Tous</div>
+            <div class="filter-btn" onclick="filterProducts('Acheté')">Achetés</div>
+            <div class="filter-btn" onclick="filterProducts('En vente')">En vente</div>
+            <div class="filter-btn" onclick="filterProducts('Vendu')">Vendus</div>
+        </div>
+
+        <div id="product-list">
+            </div>
+    </div>
+
+    <div id="view-form" class="view">
+        <h1 id="form-title">Nouveau Produit</h1>
+        
+        <div class="input-group">
+            <label>Lien Vinted (Optionnel)</label>
+            <input type="url" id="input-link" placeholder="https://vinted.fr/...">
+        </div>
+        <div class="input-group">
+            <label>Nom du Produit *</label>
+            <input type="text" id="input-name" placeholder="Ex: Pull Nike Vintage">
+        </div>
+        <div class="input-group">
+            <label>Marque</label>
+            <input type="text" id="input-brand" placeholder="Ex: Nike">
+        </div>
+        <div class="grid-2">
+            <div class="input-group">
+                <label>Prix d'achat (€) *</label>
+                <input type="number" id="input-buy" placeholder="20" step="0.5">
+            </div>
+            <div class="input-group">
+                <label>Frais (€)</label>
+                <input type="number" id="input-fees" placeholder="2.5" step="0.5">
+            </div>
+        </div>
+        <div class="input-group">
+            <label>Prix de vente prévu (€) *</label>
+            <input type="number" id="input-sell" placeholder="45" step="0.5">
+        </div>
+        <div class="input-group">
+            <label>Prix Vendu Réel (€)</label>
+            <input type="number" id="input-actual-sell" placeholder="Laisser vide si non vendu" step="0.5">
+        </div>
+        <div class="input-group">
+            <label>Statut</label>
+            <select id="input-status">
+                <option value="Acheté">Acheté</option>
+                <option value="En vente" selected>En vente</option>
+                <option value="Vendu">Vendu</option>
+            </select>
+        </div>
+
+        <input type="hidden" id="input-id">
+        <button class="btn btn-primary" onclick="saveProduct()">Enregistrer le produit</button>
+        <button class="btn btn-danger" id="btn-delete" style="display:none;" onclick="deleteProduct()">Supprimer ce produit</button>
+    </div>
+
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="switchView('view-dashboard', this)">
+            <i class="fa-solid fa-chart-pie"></i>
+            <span>Bilan</span>
+        </div>
+        <div class="nav-item" onclick="switchView('view-products', this)">
+            <i class="fa-solid fa-boxes-stacked"></i>
+            <span>Stock</span>
+        </div>
+        <div class="nav-item" onclick="openAddForm()">
+            <div class="nav-fab"><i class="fa-solid fa-plus"></i></div>
+        </div>
+    </nav>
+
+</div>
+
+<script>
+    /* ==========================================================================
+       LOGIQUE JAVASCRIPT & STATE MANAGEMENT
+       ========================================================================== */
+    
+    // Initialisation du stockage local
+    let products = JSON.parse(localStorage.getItem('vinted_products')) || [];
+    let currentFilter = 'Tous';
+
+    // Formate les nombres en euros
+    const formatEur = (num) => '€' + parseFloat(num).toFixed(2);
+    
+    // Génère l'ID #0001
+    const generateId = () => {
+        const count = products.length + 1;
+        return '#' + count.toString().padStart(4, '0');
+    };
+
+    // Navigation entre les vues
+    function switchView(viewId, navElement = null) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById(viewId).classList.add('active');
+        
+        if(navElement) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            navElement.classList.add('active');
+        }
+
+        if(viewId === 'view-dashboard') updateDashboard();
+        if(viewId === 'view-products') renderProducts();
+    }
+
+    // Ouvrir le formulaire en mode "Ajout"
+    function openAddForm() {
+        document.getElementById('form-title').innerText = "Nouveau Produit";
+        document.getElementById('input-id').value = "";
+        document.getElementById('input-name').value = "";
+        document.getElementById('input-brand').value = "";
+        document.getElementById('input-link').value = "";
+        document.getElementById('input-buy').value = "";
+        document.getElementById('input-sell').value = "";
+        document.getElementById('input-fees').value = "";
+        document.getElementById('input-actual-sell').value = "";
+        document.getElementById('input-status').value = "En vente";
+        document.getElementById('btn-delete').style.display = "none";
+        
+        switchView('view-form');
+    }
+
+    // Ouvrir le formulaire en mode "Édition"
+    function editProduct(id) {
+        const p = products.find(prod => prod.id === id);
+        if(!p) return;
+
+        document.getElementById('form-title').innerText = "Modifier Produit " + p.id;
+        document.getElementById('input-id').value = p.id;
+        document.getElementById('input-name').value = p.name;
+        document.getElementById('input-brand').value = p.brand;
+        document.getElementById('input-link').value = p.link;
+        document.getElementById('input-buy').value = p.buyPrice;
+        document.getElementById('input-sell').value = p.sellPrice;
+        document.getElementById('input-fees').value = p.fees || "";
+        document.getElementById('input-actual-sell').value = p.actualSellPrice || "";
+        document.getElementById('input-status').value = p.status;
+        document.getElementById('btn-delete').style.display = "block";
+        
+        switchView('view-form');
+    }
+
+    // Sauvegarder (Création ou Mise à jour)
+    function saveProduct() {
+        const idInput = document.getElementById('input-id').value;
+        const name = document.getElementById('input-name').value.trim();
+        const buyPrice = parseFloat(document.getElementById('input-buy').value) || 0;
+        const sellPrice = parseFloat(document.getElementById('input-sell').value) || 0;
+        
+        if(!name || buyPrice === 0) {
+            alert("Le nom et le prix d'achat sont obligatoires.");
+            return;
+        }
+
+        const productData = {
+            id: idInput ? idInput : generateId(),
+            name: name,
+            brand: document.getElementById('input-brand').value,
+            link: document.getElementById('input-link').value,
+            buyPrice: buyPrice,
+            sellPrice: sellPrice,
+            fees: parseFloat(document.getElementById('input-fees').value) || 0,
+            actualSellPrice: parseFloat(document.getElementById('input-actual-sell').value) || null,
+            status: document.getElementById('input-status').value,
+            date: new Date().toISOString()
+        };
+
+        if(idInput) {
+            const index = products.findIndex(p => p.id === idInput);
+            products[index] = productData;
+        } else {
+            products.unshift(productData); // Ajout au début
+        }
+
+        saveToLocal();
+        switchView('view-products', document.querySelectorAll('.nav-item')[1]);
+    }
+
+    // Supprimer un produit
+    function deleteProduct() {
+        const id = document.getElementById('input-id').value;
+        if(confirm("Supprimer ce produit définitivement ?")) {
+            products = products.filter(p => p.id !== id);
+            saveToLocal();
+            switchView('view-products', document.querySelectorAll('.nav-item')[1]);
+        }
+    }
+
+    // Sauvegarde LocalStorage
+    function saveToLocal() {
+        localStorage.setItem('vinted_products', JSON.stringify(products));
+        updateDashboard();
+    }
+
+    // Gérer les filtres
+    function filterProducts(status) {
+        currentFilter = status;
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if(btn.innerText.includes(status) || (status === 'Tous' && btn.innerText === 'Tous')) {
+                btn.classList.add('active');
+            }
+        });
+        renderProducts();
+    }
+
+    // Affichage de la liste des produits
+    function renderProducts() {
+        const list = document.getElementById('product-list');
+        list.innerHTML = "";
+
+        const filtered = currentFilter === 'Tous' ? products : products.filter(p => p.status === currentFilter);
+
+        if(filtered.length === 0) {
+            list.innerHTML = `<div style="text-align:center; padding: 40px; color: var(--text-muted);">Aucun produit trouvé.</div>`;
+            return;
+        }
+
+        filtered.forEach(p => {
+            const potentialProfit = p.sellPrice - p.buyPrice - p.fees;
+            const actualProfit = p.actualSellPrice ? (p.actualSellPrice - p.buyPrice - p.fees) : null;
+            
+            let badgeClass = p.status.toLowerCase().replace(' ', '-');
+            let profitHtml = '';
+            
+            if(p.status === 'Vendu' && actualProfit !== null) {
+                profitHtml = `<div class="finance-profit ${actualProfit >= 0 ? 'text-success' : 'text-danger'}">${actualProfit >= 0 ? '+' : ''}${formatEur(actualProfit)}</div>`;
+            } else {
+                profitHtml = `<div class="finance-profit" style="color:var(--text-muted);">~${potentialProfit > 0 ? '+' : ''}${formatEur(potentialProfit)}</div>`;
+            }
+
+            // Utilisation d'une initiale comme image par défaut ultra minimaliste
+            const initial = p.brand ? p.brand.charAt(0).toUpperCase() : p.name.charAt(0).toUpperCase();
+
+            list.innerHTML += `
+                <div class="product-card" onclick="editProduct('${p.id}')">
+                    <div class="product-img-placeholder">${initial}</div>
+                    <div class="product-info">
+                        <div class="product-id">${p.id}</div>
+                        <div class="product-title">${p.name}</div>
+                        <div class="badge ${badgeClass}">${p.status}</div>
+                    </div>
+                    <div class="product-finances">
+                        <div class="finance-line">Achat ${formatEur(p.buyPrice)}</div>
+                        <div class="finance-line">Vente ${p.actualSellPrice ? formatEur(p.actualSellPrice) : formatEur(p.sellPrice)}</div>
+                        ${profitHtml}
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    // Mise à jour du Dashboard (Calculs)
+    function updateDashboard() {
+        let invested = 0;
+        let potentialProfit = 0;
+        let realizedProfit = 0;
+        let sellingCount = 0;
+        let soldCount = 0;
+
+        products.forEach(p => {
+            if(p.status !== 'Vendu') {
+                invested += (p.buyPrice + p.fees);
+            }
+            
+            if(p.status === 'En vente') {
+                sellingCount++;
+                potentialProfit += (p.sellPrice - p.buyPrice - p.fees);
+            }
+            
+            if(p.status === 'Vendu') {
+                soldCount++;
+                realizedProfit += (p.actualSellPrice - p.buyPrice - p.fees);
+            }
+        });
+
+        document.getElementById('dash-invested').innerText = formatEur(invested);
+        document.getElementById('dash-potential-profit').innerText = '+' + formatEur(potentialProfit);
+        
+        const realProfEl = document.getElementById('dash-realized-profit');
+        realProfEl.innerText = (realizedProfit > 0 ? '+' : '') + formatEur(realizedProfit);
+        realProfEl.className = 'summary-main ' + (realizedProfit >= 0 ? 'text-success' : 'text-danger');
+
+        document.getElementById('dash-count-selling').innerText = sellingCount;
+        document.getElementById('dash-count-sold').innerText = soldCount;
+    }
+
+    // Lancement au démarrage
+    updateDashboard();
+
+</script>
+</body>
+</html>

@@ -186,13 +186,58 @@
         .stat-label { font-size: 11px; color: rgba(255,255,255,0.6); }
         .rep-label { font-size: 11px; color: rgb(3, 3, 3); }
 
-
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
         .mini-card {
             background: var(--card-bg); border-radius: 16px; padding: 16px;
             box-shadow: var(--shadow); display: flex; flex-direction: column;
         }
         .mini-card i { font-size: 20px; color: var(--accent); margin-bottom: 8px; }
+
+        /* ==========================================================================
+           SOLD PRODUCTS (NOUVELLE SECTION DASHBOARD)
+           ========================================================================== */
+        .sold-products-section {
+            margin-top: 24px;
+        }
+        .sold-products-section h2 {
+            font-size: 18px;
+            margin-bottom: 12px;
+            color: var(--text-main);
+        }
+        .sold-item {
+            display: flex;
+            align-items: center;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            padding: 12px;
+            margin-bottom: 12px;
+            gap: 16px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .sold-item:active { transform: scale(0.98); }
+        
+        .sold-img-container {
+            width: 50px; height: 50px; border-radius: 10px; background: #E5E5EA;
+            display: flex; align-items: center; justify-content: center; color: #8E8E93;
+            font-size: 18px; flex-shrink: 0; overflow: hidden; position: relative;
+        }
+        .sold-img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .sold-info { flex-grow: 1; display: flex; flex-direction: column; gap: 4px; }
+        .sold-title { 
+            font-weight: 600; font-size: 15px; margin: 0; color: var(--text-main);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px;
+        }
+        .sold-price { font-weight: 700; color: var(--success); font-size: 15px; margin: 0; }
+        .sold-price.negative { color: var(--danger); }
+        
+        .empty-msg {
+            text-align: center; color: var(--text-muted); font-size: 14px;
+            font-style: italic; padding: 16px 0; display: none;
+        }
 
         /* ==========================================================================
            PRODUCT CARDS
@@ -306,6 +351,7 @@
 
 <div id="app-container">
     
+    <!-- VUE : SÉLECTION DE PROFIL (NETFLIX STYLE) -->
     <div id="view-profile-select" class="view">
         <div class="profile-title">Qui utilise l'application ?</div>
         <div class="profile-subtitle">Sélectionnez votre profil pour accéder à vos produits</div>
@@ -322,6 +368,7 @@
         </div>
     </div>
 
+    <!-- VUE 1 : DASHBOARD -->
     <div id="view-dashboard" class="view">
         <div class="header-bar">
             <h1>Mon Activité</h1>
@@ -364,8 +411,19 @@
                 <span class="stat-value" id="dash-count-sold">0</span>
             </div>
         </div>
+
+        <!-- NOUVELLE SECTION : DERNIÈRES VENTES -->
+        <div class="sold-products-section">
+            <h2>Dernières ventes</h2>
+            <div id="sold-products-list">
+                <!-- Rendu dynamique JS -->
+            </div>
+            <p id="no-sold-msg" class="empty-msg">Aucun produit vendu pour le moment.</p>
+        </div>
+
     </div>
 
+    <!-- VUE 2 : PRODUITS -->
     <div id="view-products" class="view">
         <div class="header-bar">
             <h1>Inventaire</h1>
@@ -383,9 +441,11 @@
         </div>
 
         <div id="product-list">
-            </div>
+            <!-- Rendu dynamique JS -->
+        </div>
     </div>
 
+    <!-- VUE 3 : AJOUTER/MODIFIER UN PRODUIT -->
     <div id="view-form" class="view">
         <div class="header-bar">
             <h1 id="form-title">Nouveau Produit</h1>
@@ -447,6 +507,7 @@
         <button class="btn btn-danger" id="btn-delete" style="display:none;" onclick="deleteProduct()">Supprimer ce produit</button>
     </div>
 
+    <!-- NAVIGATION BASSE -->
     <nav class="bottom-nav" id="main-nav" style="display: none;">
         <div class="nav-item active" onclick="switchView('view-dashboard', this)">
             <i class="fa-solid fa-chart-pie"></i>
@@ -472,7 +533,11 @@
     let currentProfile = localStorage.getItem('vinted_active_profile') || null;
     let currentFilter = 'Tous';
 
-    const formatEur = (num) => '€' + parseFloat(num).toFixed(2);
+    // Formatage des Euros (Correction d'un petit bug d'affichage négatif)
+    const formatEur = (num) => {
+        const val = parseFloat(num);
+        return (val < 0 ? '-' : '') + '€' + Math.abs(val).toFixed(2);
+    };
 
     // Initialisation
     function initApp() {
@@ -553,14 +618,7 @@
         const realizedProfit = actualSell - cost;
 
         return {
-            buy,
-            fees,
-            cost,
-            targetSell,
-            actualSell,
-            hasActualSell,
-            potentialProfit,
-            realizedProfit
+            buy, fees, cost, targetSell, actualSell, hasActualSell, potentialProfit, realizedProfit
         };
     }
 
@@ -752,6 +810,55 @@
         });
     }
 
+    // NOUVELLE FONCTION : Affichage de la liste des dernières ventes sur le Bilan
+    function renderSoldProducts() {
+        const list = document.getElementById('sold-products-list');
+        const emptyMsg = document.getElementById('no-sold-msg');
+        list.innerHTML = "";
+
+        const profileProducts = getActiveProfileProducts();
+        // Filtrer les vendus et trier du plus récent au plus ancien
+        const soldProducts = profileProducts
+            .filter(p => p.status === 'Vendu')
+            .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        if (soldProducts.length === 0) {
+            emptyMsg.style.display = 'block';
+        } else {
+            emptyMsg.style.display = 'none';
+            
+            soldProducts.forEach(p => {
+                const fin = getProductFinances(p);
+                const profit = fin.realizedProfit;
+
+                // Photo ou Initiale
+                let imgContainerHtml = '';
+                if (p.image) {
+                    imgContainerHtml = `<img src="${p.image}" class="sold-img" alt="${p.name}">`;
+                } else {
+                    const initial = p.brand ? p.brand.charAt(0).toUpperCase() : p.name.charAt(0).toUpperCase();
+                    imgContainerHtml = `<span>${initial}</span>`;
+                }
+
+                // Formatage du prix
+                const priceClass = profit >= 0 ? 'sold-price' : 'sold-price negative';
+                const sign = profit >= 0 ? '+' : '';
+                const formattedProfit = `${sign}${formatEur(profit)}`;
+
+                // Ajout de la carte (avec lien vers édition)
+                list.innerHTML += `
+                    <div class="sold-item" onclick="editProduct('${p.id}')">
+                        <div class="sold-img-container">${imgContainerHtml}</div>
+                        <div class="sold-info">
+                            <h4 class="sold-title">${p.name}</h4>
+                        </div>
+                        <div class="${priceClass}">${formattedProfit}</div>
+                    </div>
+                `;
+            });
+        }
+    }
+
     function updateDashboard() {
         let invested = 0;
         let potentialProfit = 0;
@@ -794,6 +901,9 @@
 
         document.getElementById('dash-count-selling').innerText = sellingCount;
         document.getElementById('dash-count-sold').innerText = soldCount;
+
+        // Appel de la mise à jour de la liste des dernières ventes
+        renderSoldProducts();
     }
 
     initApp();

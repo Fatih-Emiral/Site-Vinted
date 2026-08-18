@@ -194,7 +194,7 @@
         .mini-card i { font-size: 20px; color: var(--accent); margin-bottom: 8px; }
 
         /* ==========================================================================
-           SOLD PRODUCTS (NOUVELLE SECTION DASHBOARD)
+           SOLD PRODUCTS (SECTION DASHBOARD)
            ========================================================================== */
         .sold-products-section {
             margin-top: 24px;
@@ -412,7 +412,6 @@
             </div>
         </div>
 
-        <!-- NOUVELLE SECTION : DERNIÈRES VENTES -->
         <div class="sold-products-section">
             <h2>Dernières ventes</h2>
             <div id="sold-products-list">
@@ -420,7 +419,6 @@
             </div>
             <p id="no-sold-msg" class="empty-msg">Aucun produit vendu pour le moment.</p>
         </div>
-
     </div>
 
     <!-- VUE 2 : PRODUITS -->
@@ -507,6 +505,49 @@
         <button class="btn btn-danger" id="btn-delete" style="display:none;" onclick="deleteProduct()">Supprimer ce produit</button>
     </div>
 
+    <!-- VUE 4 : LISTE POUR PREUVES D'EMBALLAGE -->
+    <div id="view-proofs" class="view">
+        <div class="header-bar">
+            <h1>Preuves de colis</h1>
+            <div class="profile-badge-btn" onclick="showProfileSelect()">
+                <div class="profile-dot" id="current-profile-dot-3"></div>
+                <span id="current-profile-name-3">Profil</span>
+            </div>
+        </div>
+        
+        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">
+            Stockez ici les photos et vidéos de vos emballages classés par produit pour vous protéger en cas de litige Vinted.<br><br>
+            <i class="fa-solid fa-circle-info"></i> Sélectionnez un produit ci-dessous pour y ajouter vos preuves.
+        </p>
+
+        <div id="proofs-product-list">
+            <!-- Rendu dynamique JS (Liste des produits pour accéder aux preuves) -->
+        </div>
+    </div>
+
+    <!-- VUE 5 : DÉTAILS DES PREUVES D'UN PRODUIT -->
+    <div id="view-proof-details" class="view">
+        <div class="header-bar" style="padding-bottom: 0;">
+            <h1 id="proof-details-title">Preuves</h1>
+            <button class="btn" style="width: auto; padding: 8px 16px; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border);" onclick="switchView('view-proofs', document.querySelectorAll('.nav-item')[2])">Retour</button>
+        </div>
+        
+        <div class="input-group" style="margin-top: 20px;">
+            <div class="image-uploader-box">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span style="font-weight: 600;">Ajouter photo ou vidéo</span>
+                <span style="font-size: 11px; color: var(--text-muted); margin-top: 5px;">Sera sauvegardé sur cet appareil</span>
+                <!-- Accept video and image -->
+                <input type="file" accept="image/*,video/*" onchange="handleProofUpload(event)">
+            </div>
+        </div>
+
+        <h2 style="font-size: 16px; margin-top: 24px;">Preuves enregistrées</h2>
+        <div id="proof-gallery" style="display: flex; flex-direction: column; gap: 16px; margin-top: 10px;">
+            <!-- Vidéos et photos générées par JS via IndexedDB -->
+        </div>
+    </div>
+
     <!-- NAVIGATION BASSE -->
     <nav class="bottom-nav" id="main-nav" style="display: none;">
         <div class="nav-item active" onclick="switchView('view-dashboard', this)">
@@ -516,6 +557,10 @@
         <div class="nav-item" onclick="switchView('view-products', this)">
             <i class="fa-solid fa-boxes-stacked"></i>
             <span>Stock</span>
+        </div>
+        <div class="nav-item" onclick="switchView('view-proofs', this)">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Preuves</span>
         </div>
         <div class="nav-item" onclick="openAddForm()">
             <div class="nav-fab"><i class="fa-solid fa-plus"></i></div>
@@ -533,7 +578,7 @@
     let currentProfile = localStorage.getItem('vinted_active_profile') || null;
     let currentFilter = 'Tous';
 
-    // Formatage des Euros (Correction d'un petit bug d'affichage négatif)
+    // Formatage des Euros 
     const formatEur = (num) => {
         const val = parseFloat(num);
         return (val < 0 ? '-' : '') + '€' + Math.abs(val).toFixed(2);
@@ -568,6 +613,12 @@
         
         document.getElementById('current-profile-name').innerText = profileName;
         document.getElementById('current-profile-name-2').innerText = profileName;
+        
+        // Nouvelle nav pour la page Preuves
+        if(document.getElementById('current-profile-name-3')) {
+            document.getElementById('current-profile-name-3').innerText = profileName;
+            document.getElementById('current-profile-dot-3').className = 'profile-dot ' + currentProfile;
+        }
 
         const dot1 = document.getElementById('current-profile-dot');
         const dot2 = document.getElementById('current-profile-dot-2');
@@ -602,9 +653,9 @@
 
         if(viewId === 'view-dashboard') updateDashboard();
         if(viewId === 'view-products') renderProducts();
+        if(viewId === 'view-proofs') renderProofsProducts(); // Charger la liste pour les preuves
     }
 
-    // FONCTION DE CALCUL UNIFIÉE
     function getProductFinances(p) {
         const buy = Number(p.buyPrice) || 0;
         const fees = Number(p.fees) || 0;
@@ -617,9 +668,7 @@
         const potentialProfit = targetSell - cost;
         const realizedProfit = actualSell - cost;
 
-        return {
-            buy, fees, cost, targetSell, actualSell, hasActualSell, potentialProfit, realizedProfit
-        };
+        return { buy, fees, cost, targetSell, actualSell, hasActualSell, potentialProfit, realizedProfit };
     }
 
     function handleImageUpload(event) {
@@ -718,7 +767,7 @@
             fees: parseFloat(document.getElementById('input-fees').value) || 0,
             actualSellPrice: actualSellVal !== "" ? parseFloat(actualSellVal) : null,
             status: document.getElementById('input-status').value,
-            date: new Date().toISOString()
+            date: idInput ? products.find(p => p.id === idInput).date : new Date().toISOString() // conserve date originelle
         };
 
         if(idInput) {
@@ -810,14 +859,12 @@
         });
     }
 
-    // NOUVELLE FONCTION : Affichage de la liste des dernières ventes sur le Bilan
     function renderSoldProducts() {
         const list = document.getElementById('sold-products-list');
         const emptyMsg = document.getElementById('no-sold-msg');
         list.innerHTML = "";
 
         const profileProducts = getActiveProfileProducts();
-        // Filtrer les vendus et trier du plus récent au plus ancien
         const soldProducts = profileProducts
             .filter(p => p.status === 'Vendu')
             .sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -831,7 +878,6 @@
                 const fin = getProductFinances(p);
                 const profit = fin.realizedProfit;
 
-                // Photo ou Initiale
                 let imgContainerHtml = '';
                 if (p.image) {
                     imgContainerHtml = `<img src="${p.image}" class="sold-img" alt="${p.name}">`;
@@ -840,12 +886,10 @@
                     imgContainerHtml = `<span>${initial}</span>`;
                 }
 
-                // Formatage du prix
                 const priceClass = profit >= 0 ? 'sold-price' : 'sold-price negative';
                 const sign = profit >= 0 ? '+' : '';
                 const formattedProfit = `${sign}${formatEur(profit)}`;
 
-                // Ajout de la carte (avec lien vers édition)
                 list.innerHTML += `
                     <div class="sold-item" onclick="editProduct('${p.id}')">
                         <div class="sold-img-container">${imgContainerHtml}</div>
@@ -860,26 +904,18 @@
     }
 
     function updateDashboard() {
-        let invested = 0;
-        let potentialProfit = 0;
-        let realizedProfit = 0;
-        let sellingCount = 0;
-        let soldCount = 0;
-
+        let invested = 0, potentialProfit = 0, realizedProfit = 0, sellingCount = 0, soldCount = 0;
         const profileProducts = getActiveProfileProducts();
 
         profileProducts.forEach(p => {
             const fin = getProductFinances(p);
-
             if (p.status === 'Vendu') {
                 soldCount++;
                 realizedProfit += fin.realizedProfit;
             } else {
                 invested += fin.cost;
                 potentialProfit += fin.potentialProfit;
-                if (p.status === 'En vente') {
-                    sellingCount++;
-                }
+                if (p.status === 'En vente') sellingCount++;
             }
         });
 
@@ -902,8 +938,166 @@
         document.getElementById('dash-count-selling').innerText = sellingCount;
         document.getElementById('dash-count-sold').innerText = soldCount;
 
-        // Appel de la mise à jour de la liste des dernières ventes
         renderSoldProducts();
+    }
+
+    /* ==========================================================================
+       GESTION DES PREUVES D'EMBALLAGE (VIDEOS/PHOTOS) AVEC INDEXED-DB
+       ========================================================================== */
+    
+    let proofsDB;
+    let currentProofProductId = null;
+
+    // Initialiser la base de données IndexedDB (Idéal pour stocker des fichiers lourds localement)
+    const dbReq = indexedDB.open('VintedProofsDB', 1);
+    
+    dbReq.onupgradeneeded = (e) => {
+        let db = e.target.result;
+        if (!db.objectStoreNames.contains('proofs')) {
+            // Création de l'espace de stockage
+            let store = db.createObjectStore('proofs', { keyPath: 'id', autoIncrement: true });
+            store.createIndex('productId', 'productId', { unique: false });
+            store.createIndex('profileId', 'profileId', { unique: false });
+        }
+    };
+    
+    dbReq.onsuccess = (e) => { proofsDB = e.target.result; };
+    dbReq.onerror = (e) => { console.error("Erreur IndexedDB", e); };
+
+    // Rendre la liste des produits dans l'onglet "Preuves"
+    function renderProofsProducts() {
+        const list = document.getElementById('proofs-product-list');
+        list.innerHTML = "";
+        const profileProducts = getActiveProfileProducts();
+
+        if(profileProducts.length === 0) {
+            list.innerHTML = `<div class="empty-msg" style="display:block;">Aucun produit disponible.</div>`;
+            return;
+        }
+
+        profileProducts.forEach(p => {
+            let badgeClass = p.status.toLowerCase().replace(' ', '-');
+            let imgContainerHtml = p.image 
+                ? `<img src="${p.image}" class="product-img" alt="${p.name}">` 
+                : `<span>${p.brand ? p.brand.charAt(0).toUpperCase() : p.name.charAt(0).toUpperCase()}</span>`;
+
+            list.innerHTML += `
+                <div class="product-card" onclick="openProofDetails('${p.id}', '${p.name}')">
+                    <div class="product-img-container">${imgContainerHtml}</div>
+                    <div class="product-info">
+                        <div class="product-id">${p.id}</div>
+                        <div class="product-title">${p.name}</div>
+                        <div class="badge ${badgeClass}">${p.status}</div>
+                    </div>
+                    <div class="product-finances" style="color: var(--accent);">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    // Ouvrir la page de gestion des preuves pour un produit spécifique
+    function openProofDetails(productId, productName) {
+        currentProofProductId = productId;
+        document.getElementById('proof-details-title').innerText = `${productId}`;
+        switchView('view-proof-details');
+        loadProofsFromDB();
+    }
+
+    // Gérer l'upload de photo ou vidéo d'emballage
+    function handleProofUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const isVideo = file.type.startsWith('video/');
+        const transaction = proofsDB.transaction(['proofs'], 'readwrite');
+        const store = transaction.objectStore('proofs');
+
+        const proof = {
+            productId: currentProofProductId,
+            profileId: currentProfile,
+            type: isVideo ? 'video' : 'image',
+            blob: file, // Stockage brut du fichier (Blob) : c'est ce qui permet de ne pas planter l'application !
+            date: new Date().toISOString()
+        };
+
+        const request = store.add(proof);
+        
+        request.onsuccess = () => {
+            loadProofsFromDB();
+            event.target.value = ''; // Reset de l'input
+        };
+        
+        request.onerror = (e) => {
+            alert("Erreur lors de la sauvegarde du fichier. L'espace de votre téléphone est peut-être plein.");
+        };
+    }
+
+    // Charger et afficher les preuves depuis la base de données locale
+    function loadProofsFromDB() {
+        const gallery = document.getElementById('proof-gallery');
+        gallery.innerHTML = '';
+
+        const transaction = proofsDB.transaction(['proofs'], 'readonly');
+        const store = transaction.objectStore('proofs');
+        const index = store.index('profileId');
+        const request = index.getAll(currentProfile); // On récupère toutes les preuves du profil actif
+
+        request.onsuccess = () => {
+            const allProofs = request.result;
+            // On filtre pour ne garder que celles du produit ouvert
+            const productProofs = allProofs.filter(p => p.productId === currentProofProductId);
+            
+            if(productProofs.length === 0) {
+                 gallery.innerHTML = '<p class="empty-msg" style="display:block;">Aucune preuve stockée pour cet article.</p>';
+                 return;
+            }
+
+            productProofs.forEach(p => {
+                // Création d'une URL locale temporaire pour lire le fichier sans utiliser la mémoire base64
+                const url = URL.createObjectURL(p.blob);
+                const isVideo = p.type === 'video';
+                
+                const card = document.createElement('div');
+                card.style.background = 'var(--card-bg)';
+                card.style.padding = '12px';
+                card.style.borderRadius = '16px';
+                card.style.boxShadow = 'var(--shadow)';
+                card.style.position = 'relative';
+
+                // Si vidéo -> balise <video controls> ; Si image -> balise <img>
+                const mediaHtml = isVideo 
+                    ? `<video src="${url}" controls style="width:100%; border-radius:10px; background:#000;"></video>`
+                    : `<img src="${url}" style="width:100%; border-radius:10px; object-fit:contain;">`;
+
+                // Date de la capture
+                const dateStr = new Date(p.date).toLocaleString('fr-FR', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit'});
+
+                card.innerHTML = `
+                    ${mediaHtml}
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding: 0 4px;">
+                        <span style="font-size:13px; color:var(--text-muted); font-weight:600;"><i class="fa-solid fa-clock"></i> ${dateStr}</span>
+                        <button onclick="deleteProofItem(${p.id})" style="background:rgba(255,59,48,0.1); border:none; color:var(--danger); width:32px; height:32px; border-radius:8px; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `;
+                gallery.appendChild(card);
+            });
+        };
+    }
+
+    // Supprimer une preuve (vidéo ou photo)
+    function deleteProofItem(proofId) {
+        if(!confirm("Êtes-vous sûr de vouloir supprimer ce fichier ?")) return;
+        
+        const transaction = proofsDB.transaction(['proofs'], 'readwrite');
+        const store = transaction.objectStore('proofs');
+        
+        store.delete(proofId);
+        
+        transaction.oncomplete = () => {
+            loadProofsFromDB(); // On rafraîchit la galerie
+        };
     }
 
     initApp();
